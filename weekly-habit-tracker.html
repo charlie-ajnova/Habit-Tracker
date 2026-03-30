@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weekly +1% Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #f0e8f0;
+    --paper: #1a0812;
+    --cream: #2a1020;
+    --accent: #d4648a;
+    --accent-pale: #3d1428;
+    --muted: #8a6878;
+    --green: #7ec8a0;
+    --green-pale: #1a3828;
+    --red: #e06060;
+    --red-pale: #3a1818;
+    --line: #3d1f30;
+    --plum: #421131;
+    --plum-bright: #6b1d4f;
+    --plum-glow: rgba(212, 100, 138, 0.15);
+  }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+    padding: 32px 24px 60px;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 36px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  .title-block h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 38px;
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+  .title-block h1 span {
+    color: var(--accent);
+    font-style: italic;
+  }
+  .title-block p {
+    color: var(--muted);
+    font-size: 12px;
+    margin-top: 6px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.03em;
+  }
+  .week-badge {
+    background: var(--plum-bright);
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 6px 14px;
+    border-radius: 2px;
+    white-space: nowrap;
+    letter-spacing: 0.08em;
+    border: 1px solid var(--accent);
+  }
+
+  /* ── STATS ROW ── */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  .stat-card {
+    background: var(--plum);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 14px 16px;
+  }
+  .stat-card .label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .stat-card .value {
+    font-family: 'DM Serif Display', serif;
+    font-size: 28px;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .stat-card .value.accent { color: var(--accent); }
+  .stat-card .value.green { color: var(--green); }
+  .stat-card .sub {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ── COMPOUND VISUAL ── */
+  .compound-section {
+    background: var(--plum);
+    border: 1px solid var(--plum-bright);
+    border-radius: 4px;
+    padding: 20px 20px 16px;
+    margin-bottom: 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .compound-section::before {
+    content: '+1%';
+    position: absolute;
+    right: 20px;
+    top: 10px;
+    font-family: 'DM Serif Display', serif;
+    font-size: 64px;
+    color: rgba(212, 100, 138, 0.08);
+    line-height: 1;
+    pointer-events: none;
+  }
+  .compound-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+  .bar-track {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 56px;
+  }
+  .bar-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+  }
+  .bar {
+    width: 100%;
+    border-radius: 2px 2px 0 0;
+    transition: height 0.4s ease;
+    min-height: 3px;
+  }
+  .bar.active { background: var(--accent); }
+  .bar.past   { background: var(--plum-bright); }
+  .bar.future { background: rgba(212,100,138,0.08); border: 1px dashed var(--line); }
+  .bar-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0;
+  }
+  .bar-num.active-num { color: var(--accent); }
+
+  /* ── ADD HABIT FORM ── */
+  .add-section {
+    margin-bottom: 24px;
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+  .add-section input {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1.5px solid var(--line);
+    border-radius: 3px;
+    background: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .add-section input:focus { border-color: var(--accent); }
+  .add-section input::placeholder { color: var(--muted); }
+  .week-select {
+    padding: 10px 10px;
+    border: 1.5px solid var(--line);
+    border-radius: 3px;
+    background: var(--cream);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--ink);
+    cursor: pointer;
+    outline: none;
+    min-width: 90px;
+  }
+  .btn-add {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 10px 20px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+  .btn-add:hover { opacity: 0.85; }
+
+  /* ── HABIT LIST ── */
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--muted);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  .habit-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 28px; }
+
+  .habit-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--cream);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 10px 14px;
+    transition: border-color 0.15s;
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform: translateY(-4px); } to { opacity:1; transform:none; } }
+
+  .habit-row:hover { border-color: var(--accent); }
+  .habit-row.eliminated {
+    opacity: 0.4;
+    background: var(--plum);
+    text-decoration: line-through;
+    border-style: dashed;
+  }
+
+  .habit-week-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    background: var(--accent-pale);
+    color: var(--accent);
+    padding: 2px 7px;
+    border-radius: 2px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .habit-week-tag.elim { background: var(--red-pale); color: var(--red); }
+
+  .habit-name {
+    flex: 1;
+    font-size: 13.5px;
+    font-weight: 400;
+    color: var(--ink);
+  }
+
+  .streak-dots {
+    display: flex;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--line);
+    cursor: pointer;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .dot:hover { transform: scale(1.3); }
+  .dot.done { background: var(--green); }
+  .dot.skip { background: var(--accent); opacity: 0.5; }
+
+  .streak-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    min-width: 28px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .streak-count.hot { color: var(--green); font-weight: 500; }
+
+  .btn-elim {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 14px;
+    padding: 2px 4px;
+    border-radius: 2px;
+    line-height: 1;
+    transition: color 0.15s, background 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-elim:hover { color: var(--red); background: var(--red-pale); }
+  .btn-restore {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 12px;
+    padding: 2px 4px;
+    border-radius: 2px;
+    transition: color 0.15s;
+    flex-shrink: 0;
+    font-family: 'DM Mono', monospace;
+  }
+  .btn-restore:hover { color: var(--green); }
+
+  .btn-edit {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 13px;
+    padding: 2px 4px;
+    border-radius: 2px;
+    line-height: 1;
+    transition: color 0.15s, background 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-edit:hover { color: var(--accent); background: var(--accent-pale); }
+
+  .btn-delete {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 11px;
+    padding: 2px 5px;
+    border-radius: 2px;
+    line-height: 1;
+    transition: color 0.15s, background 0.15s;
+    flex-shrink: 0;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 0.03em;
+  }
+  .btn-delete:hover { color: var(--red); background: var(--red-pale); }
+
+  .habit-row.editing { border-color: var(--accent); background: var(--plum); }
+  .edit-input {
+    flex: 1;
+    border: none;
+    border-bottom: 1.5px solid var(--accent);
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13.5px;
+    color: var(--ink);
+    outline: none;
+    padding: 1px 2px;
+  }
+  .btn-save {
+    background: var(--green);
+    color: white;
+    border: none;
+    border-radius: 2px;
+    padding: 3px 10px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 24px;
+    color: var(--muted);
+    font-size: 12px;
+    font-family: 'DM Mono', monospace;
+    border: 1px dashed var(--line);
+    border-radius: 3px;
+  }
+
+  /* ── WEEK TIMELINE ── */
+  .timeline-section { margin-bottom: 28px; }
+  .week-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  .week-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+    background: var(--cream);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .week-pill:hover { border-color: var(--accent); color: var(--accent); }
+  .week-pill.current {
+    background: var(--plum-bright);
+    color: var(--ink);
+    border-color: var(--accent);
+  }
+  .week-pill.viewing {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+  .past-week-banner {
+    background: var(--accent-pale);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    padding: 9px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .btn-back-today {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 2px;
+    padding: 4px 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-back-today:hover { opacity: 0.85; }
+  .week-pill .pip {
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
+  /* ── FOOTER NOTE ── */
+  .footer-note {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 16px;
+    letter-spacing: 0.04em;
+  }
+
+  @media (max-width: 600px) {
+    .stats-row { grid-template-columns: repeat(2,1fr); }
+    .title-block h1 { font-size: 28px; }
+    .bar-num { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="title-block">
+    <h1>Weekly <span>+1%</span></h1>
+    <p id="dateRange">Loading week range...</p>
+  </div>
+  <div class="week-badge" id="currentWeekBadge">WEEK —</div>
+</div>
+
+<div class="stats-row">
+  <div class="stat-card">
+    <div class="label">Active Habits</div>
+    <div class="value accent" id="statActive">0</div>
+    <div class="sub">this week</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Weeks Running</div>
+    <div class="value" id="statWeeks">0</div>
+    <div class="sub">since Jan 6, 2026</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Eliminated</div>
+    <div class="value" id="statElim">0</div>
+    <div class="sub">didn't stick</div>
+  </div>
+  <div class="stat-card">
+    <div class="label">Compound Stack</div>
+    <div class="value green" id="statCompound">+0%</div>
+    <div class="sub">habits compounded</div>
+  </div>
+</div>
+
+<!-- Compound bar chart -->
+<div class="compound-section">
+  <div class="compound-label">Habit Stack Growth — Week by Week</div>
+  <div class="bar-track" id="barTrack"></div>
+</div>
+
+<!-- Add habit -->
+<div class="add-section">
+  <input type="text" id="habitInput" placeholder="Name your new habit..." maxlength="80" />
+  <select class="week-select" id="weekSelect"></select>
+  <button class="btn-add" onclick="addHabit()">+ ADD</button>
+</div>
+
+<!-- Past week banner (shown when not viewing current week) -->
+<div id="pastWeekBanner" class="past-week-banner" style="display:none">
+  <span id="pastWeekMsg"></span>
+  <button class="btn-back-today" onclick="viewingWeek = CURRENT_WEEK; render()">↩ Back to today</button>
+</div>
+
+<!-- Active habits -->
+<div class="section-label">Active Habits</div>
+<div class="habit-list" id="activeList"></div>
+
+<!-- Eliminated -->
+<div class="section-label">Eliminated</div>
+<div class="habit-list" id="elimList"></div>
+
+<!-- Week timeline -->
+<div class="timeline-section">
+  <div class="section-label">Week Timeline</div>
+  <div class="week-pills" id="weekPills"></div>
+</div>
+
+<div class="footer-note">Click week pills to browse past weeks · dots save per-week · ✎ edit name · × eliminate · ↩ restore · del to permanently delete</div>
+
+<script>
+// ── CONSTANTS ──
+const START = new Date('2026-01-05'); // Monday Jan 5 2026 (Week 1)
+const TOTAL_WEEKS = 52;
+
+function getWeekNumber(date) {
+  const ms = date - START;
+  if (ms < 0) return 1;
+  return Math.min(Math.floor(ms / (7 * 24 * 3600 * 1000)) + 1, TOTAL_WEEKS);
+}
+
+function getWeekDateRange(weekNum) {
+  const mon = new Date(START.getTime() + (weekNum - 1) * 7 * 24 * 3600 * 1000);
+  const sun = new Date(mon.getTime() + 6 * 24 * 3600 * 1000);
+  const fmt = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return `${fmt(mon)} – ${fmt(sun)}`;
+}
+
+const TODAY = new Date();
+const CURRENT_WEEK = getWeekNumber(TODAY);
+
+// ── STATE ──
+let habits = JSON.parse(localStorage.getItem('plus1_habits') || '[]');
+let viewingWeek = CURRENT_WEEK;
+
+// Migrate old habits that have a flat `days` array to per-week map
+habits = habits.map(h => {
+  if (Array.isArray(h.days)) {
+    const weekDays = {};
+    weekDays[CURRENT_WEEK] = h.days;
+    return { ...h, days: undefined, weekDays };
+  }
+  if (!h.weekDays) h.weekDays = {};
+  return h;
+});
+
+function save() {
+  localStorage.setItem('plus1_habits', JSON.stringify(habits));
+}
+
+function getDays(h, week) {
+  return (h.weekDays && h.weekDays[week]) || [false,false,false,false,false,false,false];
+}
+
+function setDays(h, week, days) {
+  if (!h.weekDays) h.weekDays = {};
+  h.weekDays[week] = days;
+}
+
+// ── ADD HABIT ──
+function addHabit() {
+  const name = document.getElementById('habitInput').value.trim();
+  const week = parseInt(document.getElementById('weekSelect').value);
+  if (!name) return;
+  habits.push({
+    id: Date.now(),
+    name,
+    week,
+    eliminated: false,
+    elimWeek: null,
+    weekDays: {}
+  });
+  save();
+  document.getElementById('habitInput').value = '';
+  render();
+}
+document.getElementById('habitInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addHabit();
+});
+
+function eliminateHabit(id) {
+  const h = habits.find(x => x.id === id);
+  if (!h) return;
+  h.eliminated = true;
+  h.elimWeek = CURRENT_WEEK;
+  save(); render();
+}
+
+function restoreHabit(id) {
+  const h = habits.find(x => x.id === id);
+  if (!h) return;
+  h.eliminated = false;
+  h.elimWeek = null;
+  save(); render();
+}
+
+function deleteHabit(id) {
+  if (!confirm('Permanently delete this habit? This cannot be undone.')) return;
+  habits = habits.filter(x => x.id !== id);
+  save(); render();
+}
+
+let editingId = null;
+function startEdit(id) {
+  editingId = id;
+  render();
+  const inp = document.getElementById(`edit-${id}`);
+  if (inp) { inp.focus(); inp.select(); }
+}
+function saveEdit(id) {
+  const inp = document.getElementById(`edit-${id}`);
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (!val) return;
+  const h = habits.find(x => x.id === id);
+  if (h) h.name = val;
+  editingId = null;
+  save(); render();
+}
+
+function toggleDay(id, dayIdx) {
+  const h = habits.find(x => x.id === id);
+  if (!h || h.eliminated) return;
+  const days = getDays(h, viewingWeek).slice();
+  days[dayIdx] = !days[dayIdx];
+  setDays(h, viewingWeek, days);
+  save(); render();
+}
+
+// ── RENDER ──
+function render() {
+  renderHeader();
+  renderStats();
+  renderBars();
+  renderHabits();
+  renderWeekPills();
+
+  const isPast = viewingWeek !== CURRENT_WEEK;
+  const banner = document.getElementById('pastWeekBanner');
+  const addSection = document.querySelector('.add-section');
+  banner.style.display = isPast ? 'flex' : 'none';
+  if (isPast) {
+    document.getElementById('pastWeekMsg').textContent =
+      `Viewing W${viewingWeek} (${getWeekDateRange(viewingWeek)}) — dots reflect that week's log`;
+  }
+  addSection.style.opacity = isPast ? '0.4' : '1';
+  addSection.style.pointerEvents = isPast ? 'none' : 'auto';
+}
+
+function renderHeader() {
+  const isToday = viewingWeek === CURRENT_WEEK;
+  document.getElementById('currentWeekBadge').textContent =
+    isToday ? `WEEK ${CURRENT_WEEK} OF ${TOTAL_WEEKS}` : `VIEWING W${viewingWeek} — W${CURRENT_WEEK} IS NOW`;
+  document.getElementById('currentWeekBadge').style.background = isToday ? 'var(--ink)' : 'var(--accent)';
+  document.getElementById('dateRange').textContent =
+    (isToday ? '' : '← past · ') + getWeekDateRange(viewingWeek);
+}
+
+function renderStats() {
+  const active = habits.filter(h => !h.eliminated);
+  const elim = habits.filter(h => h.eliminated);
+  document.getElementById('statActive').textContent = active.length;
+  document.getElementById('statWeeks').textContent = CURRENT_WEEK;
+  document.getElementById('statElim').textContent = elim.length;
+  document.getElementById('statCompound').textContent = `+${active.length}%`;
+}
+
+function renderBars() {
+  const track = document.getElementById('barTrack');
+  track.innerHTML = '';
+  // Show weeks 1..CURRENT_WEEK + a few ahead
+  const show = Math.min(CURRENT_WEEK + 3, TOTAL_WEEKS);
+  const maxHabits = Math.max(1, ...Array.from({length: show}, (_, i) => {
+    const w = i + 1;
+    return habits.filter(h => h.week <= w && (!h.eliminated || h.elimWeek > w)).length;
+  }));
+
+  for (let w = 1; w <= show; w++) {
+    const count = habits.filter(h => h.week <= w && (!h.eliminated || h.elimWeek > w)).length;
+    const pct = maxHabits > 0 ? (count / maxHabits) : 0;
+    const heightPx = Math.max(3, Math.round(pct * 44));
+    const isCurrent = w === CURRENT_WEEK;
+    const isPast = w < CURRENT_WEEK;
+
+    const col = document.createElement('div');
+    col.className = 'bar-col';
+    col.innerHTML = `
+      <div class="bar ${isCurrent ? 'active' : isPast ? 'past' : 'future'}"
+           style="height:${heightPx}px"
+           title="Week ${w}: ${count} habit${count !== 1 ? 's' : ''}"></div>
+      <span class="bar-num ${isCurrent ? 'active-num' : ''}">${w}</span>
+    `;
+    track.appendChild(col);
+  }
+}
+
+function renderHabits() {
+  const activeEl = document.getElementById('activeList');
+  const elimEl = document.getElementById('elimList');
+  activeEl.innerHTML = '';
+  elimEl.innerHTML = '';
+
+  // Active during viewingWeek = started on or before it, not eliminated before it
+  const active = habits.filter(h =>
+    h.week <= viewingWeek && (!h.eliminated || h.elimWeek > viewingWeek)
+  ).sort((a,b) => a.week - b.week);
+
+  // Eliminated: were eliminated on or before viewingWeek (started before viewingWeek)
+  const elim = habits.filter(h =>
+    h.eliminated && h.week <= viewingWeek && h.elimWeek <= viewingWeek
+  ).sort((a,b) => a.week - b.week);
+
+  if (active.length === 0) {
+    activeEl.innerHTML = '<div class="empty-state">No active habits for this week.</div>';
+  } else {
+    active.forEach(h => activeEl.appendChild(habitRow(h, false)));
+  }
+
+  if (elim.length === 0) {
+    elimEl.innerHTML = '<div class="empty-state">Nothing eliminated yet.</div>';
+  } else {
+    elim.forEach(h => elimEl.appendChild(habitRow(h, true)));
+  }
+}
+
+function habitRow(h, isElim) {
+  const row = document.createElement('div');
+  const isEditing = editingId === h.id;
+  row.className = `habit-row${isElim ? ' eliminated' : ''}${isEditing ? ' editing' : ''}`;
+
+  const tag = document.createElement('span');
+  tag.className = `habit-week-tag${isElim ? ' elim' : ''}`;
+  tag.textContent = `W${h.week}`;
+
+  const doneCount = getDays(h, viewingWeek).filter(Boolean).length;
+
+  if (isEditing) {
+    const inp = document.createElement('input');
+    inp.className = 'edit-input';
+    inp.id = `edit-${h.id}`;
+    inp.value = h.name;
+    inp.maxLength = 80;
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') saveEdit(h.id);
+      if (e.key === 'Escape') { editingId = null; render(); }
+    });
+
+    const saveBtn = document.createElement('button');
+    saveBtn.className = 'btn-save';
+    saveBtn.textContent = 'save';
+    saveBtn.onclick = () => saveEdit(h.id);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-delete';
+    delBtn.title = 'Permanently delete';
+    delBtn.textContent = 'delete';
+    delBtn.onclick = () => deleteHabit(h.id);
+
+    row.append(tag, inp, saveBtn, delBtn);
+    return row;
+  }
+
+  const name = document.createElement('span');
+  name.className = 'habit-name';
+  name.textContent = h.name;
+
+  if (!isElim) {
+    const dots = document.createElement('div');
+    dots.className = 'streak-dots';
+    const days = ['M','T','W','T','F','S','S'];
+    getDays(h, viewingWeek).forEach((done, i) => {
+      const d = document.createElement('div');
+      d.className = `dot${done ? ' done' : ''}`;
+      d.title = days[i];
+      d.onclick = () => toggleDay(h.id, i);
+      dots.appendChild(d);
+    });
+
+    const sc = document.createElement('span');
+    sc.className = `streak-count${doneCount >= 5 ? ' hot' : ''}`;
+    sc.textContent = `${doneCount}/7`;
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-edit';
+    editBtn.title = 'Edit habit name';
+    editBtn.textContent = '✎';
+    editBtn.onclick = () => startEdit(h.id);
+
+    const elimBtn = document.createElement('button');
+    elimBtn.className = 'btn-elim';
+    elimBtn.title = 'Eliminate this habit';
+    elimBtn.textContent = '×';
+    elimBtn.onclick = () => eliminateHabit(h.id);
+
+    row.append(tag, name, dots, sc, editBtn, elimBtn);
+  } else {
+    const info = document.createElement('span');
+    info.style.cssText = 'font-size:11px;color:var(--muted);font-family:DM Mono,monospace;flex-shrink:0;';
+    info.textContent = h.elimWeek ? `elim. W${h.elimWeek}` : 'eliminated';
+
+    const restoreBtn = document.createElement('button');
+    restoreBtn.className = 'btn-restore';
+    restoreBtn.title = 'Restore habit';
+    restoreBtn.textContent = '↩';
+    restoreBtn.onclick = () => restoreHabit(h.id);
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'btn-delete';
+    delBtn.title = 'Permanently delete';
+    delBtn.textContent = 'del';
+    delBtn.onclick = () => deleteHabit(h.id);
+
+    row.append(tag, name, info, restoreBtn, delBtn);
+  }
+
+  return row;
+}
+
+function renderWeekPills() {
+  const pills = document.getElementById('weekPills');
+  pills.innerHTML = '';
+  const show = Math.min(CURRENT_WEEK + 2, TOTAL_WEEKS);
+  for (let w = 1; w <= show; w++) {
+    const count = habits.filter(h => h.week <= w && (!h.eliminated || (h.elimWeek && h.elimWeek > w))).length;
+    const pill = document.createElement('div');
+    const isViewing = w === viewingWeek;
+    const isCurrent = w === CURRENT_WEEK;
+    pill.className = `week-pill${isCurrent && isViewing ? ' current' : isViewing ? ' viewing' : ''}`;
+    const pip = count > 0 ? `<span class="pip"></span>` : '';
+    pill.innerHTML = `${pip}W${w} · ${count}`;
+    pill.title = `Week ${w}: ${getWeekDateRange(w)} · ${count} habit${count !== 1 ? 's' : ''}`;
+    pill.onclick = () => { viewingWeek = w; render(); };
+    pills.appendChild(pill);
+  }
+}
+
+// ── WEEK SELECT ──
+function populateWeekSelect() {
+  const sel = document.getElementById('weekSelect');
+  for (let w = 1; w <= CURRENT_WEEK; w++) {
+    const opt = document.createElement('option');
+    opt.value = w;
+    opt.textContent = `W${w}`;
+    if (w === CURRENT_WEEK) opt.selected = true;
+    sel.appendChild(opt);
+  }
+}
+
+// ── INIT ──
+populateWeekSelect();
+render();
+</script>
+</body>
+</html>
